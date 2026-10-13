@@ -1,6 +1,12 @@
 import unittest
 
-from api.solvers.calculus import solve_derivative, solve_integral, clean_expression, parse_math_expression
+from api.solvers.calculus import (
+    clean_expression,
+    parse_math_expression,
+    solve_derivative,
+    solve_integral,
+    solve_mixed_expression,
+)
 
 
 class TestCalculus(unittest.TestCase):
@@ -36,9 +42,29 @@ class TestCalculus(unittest.TestCase):
         result, steps = solve_integral("x", variable="x", lower_bound=0, upper_bound=1)
         self.assertIn(str(result), ["1/2", "0.5"])
 
+    def test_prose_is_rejected_not_split_into_letters(self):
+        with self.assertRaises(ValueError):
+            solve_integral("area of the region enclosed by x = 1/2 y^2 - 3", "y")
+        with self.assertRaises(ValueError):
+            solve_derivative("area of the region", "x")
+
+    def test_euler_constant(self):
+        result, _ = solve_derivative("e^x", "x")
+        self.assertEqual(result, "exp(x)")
+
     def test_invalid_expression_raises_error(self):
         with self.assertRaises(Exception):
             solve_derivative("+++---", variable="x")
+
+    def test_solve_mixed_expression(self):
+        self.assertEqual(solve_mixed_expression("2 + 3 * (4 - 1)"), 11)
+        self.assertEqual(solve_mixed_expression("8 / 4 + 3"), 5)
+
+    def test_mixed_expression_requires_finite_numeric_result(self):
+        with self.assertRaisesRegex(ValueError, "must not contain variables"):
+            solve_mixed_expression("2*x + 3")
+        with self.assertRaisesRegex(ValueError, "finite real number"):
+            solve_mixed_expression("1 / 0")
 
 
 if __name__ == "__main__":

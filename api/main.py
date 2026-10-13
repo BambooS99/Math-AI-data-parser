@@ -17,6 +17,7 @@ Classify the user's message as one of the following operations:
 - subtraction
 - multiplication
 - division
+- mixed_expression
 - derivative
 - integral
 
@@ -25,11 +26,20 @@ Do not calculate or solve anything.
 For arithmetic problems (addition, subtraction, multiplication, division):
 - Extract only numeric operands into 'normalized_input', preserving their original order.
 
+For mixed arithmetic expressions:
+- Set 'problem_type' to 'mixed_expression'.
+- Extract the complete numeric expression into 'expression', preserving operators and parentheses.
+- The expression may combine addition, subtraction, multiplication, division, and exponents, but must not contain variables.
+
 For calculus problems (derivative, integral):
 - Set 'problem_type' to 'derivative' or 'integral'.
 - Extract the normalized mathematical expression into 'expression' (e.g., '3*x^2 + 2*x', 'sin(x)', 'e^x').
 - Extract the variable of differentiation or integration into 'variable' (defaults to 'x').
 - For definite integrals, extract 'lower_bound' and 'upper_bound' if specified.
+
+The 'expression' field must contain ONLY a math formula in one variable (e.g. '3*x^2 + 2*x'), never words or sentences.
+Word problems, area/volume between curves, equations with several variables, limits, and anything that needs more than
+one derivative or integral step are NOT supported: classify them as "unknown" with needs_clarification true.
 
 If the message is unclear, combines incompatible operations, or is not one of these supported operations, use:
 - problem_type: "unknown"

@@ -8,6 +8,21 @@ from api.schemas import ClassificationResult
 
 
 class TestRouteProblem(unittest.TestCase):
+    def test_mixed_expression_uses_sympy_solver(self):
+        classification = ClassificationResult(
+            problem_type="mixed_expression",
+            expression="2 + 3 * (4 - 1)",
+            confidence=1.0,
+            needs_clarification=False,
+        )
+
+        result = route_problem(classification)
+
+        self.assertEqual(result.solver_used, "mixed_expression")
+        self.assertTrue(result.success)
+        self.assertEqual(result.result, 11)
+        self.assertIsNone(result.error_message)
+
     def test_addition_uses_arithmetic_solver(self):
         classification = ClassificationResult(
             problem_type="addition",

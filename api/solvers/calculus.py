@@ -2,13 +2,13 @@ import sympy as sp
 from sympy.parsing.sympy_parser import (
     parse_expr,
     standard_transformations,
-    implicit_multiplication_application,
+    implicit_multiplication,
     convert_xor,
 )
 
-# Standard transformations allow implicit multiplication (e.g. 2x -> 2*x) and ^ as exponentiation (e.g. x^2 -> x**2)
+# No symbol splitting, so words are never turned into products of letters. Allows implicit multiplication (e.g. 2x -> 2*x) and ^ as exponentiation (e.g. x^2 -> x**2)
 TRANSFORMATIONS = standard_transformations + (
-    implicit_multiplication_application,
+    implicit_multiplication,
     convert_xor,
 )
 
@@ -34,7 +34,34 @@ def parse_math_expression(expr_str: str) -> sp.Expr:
     cleaned = clean_expression(expr_str)
     if not cleaned:
         raise ValueError("Expression cannot be empty.")
-    return parse_expr(cleaned, transformations=TRANSFORMATIONS)
+    try:
+        parsed = parse_expr(
+            cleaned, transformations=TRANSFORMATIONS, local_dict={"e": sp.E}
+        )
+    except Exception as exc:
+        raise ValueError(f"Could not parse expression: {cleaned!r}") from None
+    # Multi-letter symbols mean prose or an unsupported problem leaked in
+    bad = sorted(s.name for s in parsed.free_symbols if len(s.name) > 1)
+    if bad:
+        raise ValueError(
+            "That doesn't look like a single-variable expression I can "
+            f"differentiate or integrate (unrecognized: {', '.join(bad)})."
+        )
+    return parsed
+
+
+def solve_mixed_expression(expression: str) -> int | float:
+    """Evaluate a numeric expression that may combine arithmetic operations."""
+    expr = parse_math_expression(expression)
+    if expr.free_symbols:
+        raise ValueError("Mixed arithmetic expressions must not contain variables.")
+
+    result = sp.simplify(expr)
+    if result.is_finite is not True or result.is_real is not True:
+        raise ValueError("Expression must evaluate to a finite real number.")
+    if result.is_integer is True:
+        return int(result)
+    return float(result)
 
 
 def solve_derivative(expression: str, variable: str = "x") -> tuple[str, list[str]]:

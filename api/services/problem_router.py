@@ -10,6 +10,27 @@ def _extract_expression(classification: schemas.ClassificationResult) -> str | N
 
 """router function (/router)"""
 def route_problem(classification: schemas.ClassificationResult) -> schemas.SolverResult:
+    if classification.problem_type == "mixed_expression":
+        expr = _extract_expression(classification)
+        if not expr:
+            return schemas.SolverResult(
+                solver_used="mixed_expression",
+                success=False,
+                error_message="No mathematical expression provided to evaluate.",
+            )
+        try:
+            return schemas.SolverResult(
+                solver_used="mixed_expression",
+                success=True,
+                result=calculus.solve_mixed_expression(expr),
+            )
+        except ValueError as e:
+            return schemas.SolverResult(
+                solver_used="mixed_expression",
+                success=False,
+                error_message=f"Could not evaluate that expression. {e}",
+            )
+
     if classification.problem_type == "addition":
         if not isinstance(classification.normalized_input, list):
             return schemas.SolverResult(
@@ -92,7 +113,7 @@ def route_problem(classification: schemas.ClassificationResult) -> schemas.Solve
             return schemas.SolverResult(
                 solver_used="calculus_derivative",
                 success=False,
-                error_message=f"Could not compute derivative: {str(e)}",
+                error_message=f"Could not compute that derivative. {e}",
             )
 
     if classification.problem_type in ("integral", "integration"):
@@ -120,7 +141,7 @@ def route_problem(classification: schemas.ClassificationResult) -> schemas.Solve
             return schemas.SolverResult(
                 solver_used="calculus_integral",
                 success=False,
-                error_message=f"Could not compute integral: {str(e)}",
+                error_message=f"Could not compute that integral. {e}",
             )
 
     return schemas.SolverResult(
