@@ -21,7 +21,6 @@ export default function App() {
           <ChatInputForm
             isLoading={isLoading}
             setIsLoading={setIsLoading}
-            submittedValue={submittedValue}
             setSubmittedValue={setSubmittedValue}
           />
         </main>

@@ -23,10 +23,59 @@ class TestRouteProblem(unittest.TestCase):
         self.assertEqual(result.result, 5)
         self.assertIsNone(result.error_message)
 
-    def test_unsupported_type_returns_error(self):
+    def test_subtraction_uses_arithmetic_solver(self):
         classification = ClassificationResult(
             problem_type="subtraction",
             normalized_input=[8, 3],
+            confidence=1.0,
+            needs_clarification=False,
+        )
+
+        result = route_problem(classification)
+
+        self.assertEqual(result.solver_used, "subtraction")
+        self.assertTrue(result.success)
+        self.assertEqual(result.result, 5)
+        self.assertIsNone(result.error_message)
+
+    def test_derivative_uses_calculus_solver(self):
+        classification = ClassificationResult(
+            problem_type="derivative",
+            expression="3x^2 + 2x",
+            variable="x",
+            confidence=1.0,
+            needs_clarification=False,
+        )
+
+        result = route_problem(classification)
+
+        self.assertEqual(result.solver_used, "calculus_derivative")
+        self.assertTrue(result.success)
+        self.assertEqual(result.result, "6*x + 2")
+        self.assertIsNotNone(result.steps)
+        self.assertIsNone(result.error_message)
+
+    def test_integral_uses_calculus_solver(self):
+        classification = ClassificationResult(
+            problem_type="integral",
+            expression="2x",
+            variable="x",
+            confidence=1.0,
+            needs_clarification=False,
+        )
+
+        result = route_problem(classification)
+
+        self.assertEqual(result.solver_used, "calculus_integral")
+        self.assertTrue(result.success)
+        self.assertEqual(result.result, "x**2 + C")
+        self.assertIsNotNone(result.steps)
+        self.assertIsNone(result.error_message)
+
+    def test_unsupported_type_returns_error(self):
+        classification = ClassificationResult(
+            problem_type="matrix_multiplication",
+            normalized_input=[],
             confidence=1.0,
             needs_clarification=False,
         )

@@ -1,52 +1,54 @@
 import React, { useState } from "react";
 import "./chatInputForm.scss";
 import type { ChatMessage } from "../../types/chat";
+import { ENDPOINTS } from "../../config/api";
 
 export default function ChatInputForm({
-  submittedValue,
   setSubmittedValue,
   isLoading,
   setIsLoading,
 }: {
   isLoading: boolean;
-  submittedValue: ChatMessage[];
   setSubmittedValue: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
-  setIsLoading: any;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [input, setInput] = useState("");
-  const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+
+  function addAssistantMessage(text: string) {
+    const reply: ChatMessage = {
+      id: crypto.randomUUID(),
+      text,
+      sender: "assistant",
+      createdAt: new Date().toISOString(),
+    };
+    setSubmittedValue((prev) => [...prev, reply]);
+  }
 
   async function sendPrompt(message: string) {
-    const url = `${API_URL}/chat`;
     setIsLoading(true);
     try {
-      const response = await fetch(url, {
+      const response = await fetch(ENDPOINTS.chat, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 
-      const replyText = data.solver.success
-        ? String(data.solver.result)
-        : (data.solver.error_message ?? "Sorry I couldn't solve that");
-
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        text: replyText,
-        sender: "assistant",
-        createdAt: new Date().toISOString(),
-      };
-
-      setSubmittedValue((prev) => [...prev, assistantMessage]);
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        text: "I couldnt get a valid response from the API. Please try again later",
-        sender: "assistant",
-        createdAt: new Date().toISOString(),
-      };
-      setSubmittedValue((prev) => [...prev, errorMessage]);
+      if (data.solver?.success) {
+        const steps: string[] = data.solver.steps ?? [];
+        addAssistantMessage(
+          [`Result: ${data.solver.result}`, ...steps].join("\n"),
+        );
+      } else {
+        addAssistantMessage(
+          data.solver?.error_message ??
+            "I couldn't solve that. Could you rephrase it?",
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      addAssistantMessage("Couldn't reach the server. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -87,11 +89,12 @@ export default function ChatInputForm({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={1}
+          disabled={isLoading}
         />
         <button
           className="chatform-bar__send"
           onClick={handleSend}
-          disabled={input.trim().length === 0}
+          disabled={input.trim().length === 0 || isLoading}
           aria-label="Send message"
         >
           <svg

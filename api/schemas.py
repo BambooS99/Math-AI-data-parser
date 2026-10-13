@@ -1,3 +1,4 @@
+from typing import Union
 from pydantic import BaseModel
 
 
@@ -9,8 +10,12 @@ class ChatRequest(BaseModel):
 
 """this creates the shape of the classifier function's return"""
 class ClassificationResult(BaseModel):
-    problem_type:  str
-    normalized_input: list [int | float]
+    problem_type: str
+    normalized_input: Union[list[int | float], str] = []
+    expression: str | None = None
+    variable: str = "x"
+    lower_bound: float | int | None = None
+    upper_bound: float | int | None = None
     confidence: float
     needs_clarification: bool
 
@@ -18,7 +23,8 @@ class ClassificationResult(BaseModel):
 class SolverResult(BaseModel):
     solver_used: str
     success: bool
-    result: int | float | None = None
+    result: int | float | str | None = None
+    steps: list[str] | None = None
     error_message: str | None = None
 
 """this prepares a shape of response for the user"""
