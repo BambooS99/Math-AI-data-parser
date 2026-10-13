@@ -1,4 +1,4 @@
-# Math GPT / RAG Data Parser
+# Math GPT / Math-AI Data Parser
 
 An AI-powered math solving and routing engine. Instead of letting LLMs hallucinate calculations, this system uses Claude to classify math queries into structured schemas and delegates the computation to a deterministic symbolic math engine (**SymPy** and Python arithmetic solvers).
 
