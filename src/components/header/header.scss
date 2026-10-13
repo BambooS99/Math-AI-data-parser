@@ -20,3 +20,13 @@
     opacity: 0.75;
   }
 }
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: var(--space-3) var(--space-4);
+
+    &__title {
+      font-size: 20px;
+    }
+  }
+}

@@ -1,5 +1,6 @@
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh; /* mobile browsers: excludes the collapsing URL bar */
   display: flex;
   flex-direction: column;
 }
@@ -13,6 +14,7 @@
 .app-main {
   flex: 1;
   min-width: 0;
+  min-height: 0; /* lets the conversation scroll inside instead of growing the page */
   display: flex;
   flex-direction: column;
 }

@@ -11,3 +11,10 @@
     border-left: 1px solid var(--color-divider);
   }
 }
+
+/* No sidebars on mobile/tablet-portrait */
+@media (max-width: 768px) {
+  .side-panel {
+    display: none;
+  }
+}
