@@ -5,8 +5,12 @@ import { ENDPOINTS } from "../../config/api";
 
 export default function ChatInputForm({
   setSubmittedValue,
+  isLoading,
+  setIsLoading,
 }: {
+  isLoading: boolean;
   setSubmittedValue: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [input, setInput] = useState("");
 
@@ -21,6 +25,7 @@ export default function ChatInputForm({
   }
 
   async function sendPrompt(message: string) {
+    setIsLoading(true);
     try {
       const response = await fetch(ENDPOINTS.chat, {
         method: "POST",
@@ -44,6 +49,8 @@ export default function ChatInputForm({
     } catch (err) {
       console.error(err);
       addAssistantMessage("Couldn't reach the server. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -63,6 +70,8 @@ export default function ChatInputForm({
     sendPrompt(message);
   }
 
+  // understand this section deeply
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -80,11 +89,12 @@ export default function ChatInputForm({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={1}
+          disabled={isLoading}
         />
         <button
           className="chatform-bar__send"
           onClick={handleSend}
-          disabled={input.trim().length === 0}
+          disabled={input.trim().length === 0 || isLoading}
           aria-label="Send message"
         >
           <svg

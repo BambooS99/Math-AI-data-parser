@@ -9,6 +9,7 @@ import "./App.css";
 
 export default function App() {
   const [submittedValue, setSubmittedValue] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="app-shell">
@@ -16,8 +17,12 @@ export default function App() {
       <div className="app-body">
         <SidePanel side="left" />
         <main className="app-main">
-          <Convo input={submittedValue} />
-          <ChatInputForm setSubmittedValue={setSubmittedValue} />
+          <Convo isLoading={isLoading} input={submittedValue} />
+          <ChatInputForm
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            setSubmittedValue={setSubmittedValue}
+          />
         </main>
         <SidePanel side="right" />
       </div>

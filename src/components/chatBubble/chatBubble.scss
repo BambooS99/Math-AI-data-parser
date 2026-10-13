@@ -6,6 +6,10 @@
   &--user {
     align-items: flex-end;
   }
+
+  &--assistant {
+    align-self: flex-start;
+  }
 }
 
 .chat-bubble {
