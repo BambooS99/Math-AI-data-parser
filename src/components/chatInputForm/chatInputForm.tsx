@@ -1,25 +1,50 @@
 import React, { useState } from "react";
 import "./chatInputForm.scss";
 import type { ChatMessage } from "../../types/chat";
+import { ENDPOINTS } from "../../config/api";
 
 export default function ChatInputForm({
-  submittedValue,
   setSubmittedValue,
 }: {
-  submittedValue: ChatMessage[];
   setSubmittedValue: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }) {
   const [input, setInput] = useState("");
 
+  function addAssistantMessage(text: string) {
+    const reply: ChatMessage = {
+      id: crypto.randomUUID(),
+      text,
+      sender: "assistant",
+      createdAt: new Date().toISOString(),
+    };
+    setSubmittedValue((prev) => [...prev, reply]);
+  }
+
   async function sendPrompt(message: string) {
-    const url = "http://127.0.0.1:8000/chat";
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
-    const data = await response.json();
-    console.log(data);
+    try {
+      const response = await fetch(ENDPOINTS.chat, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      if (data.solver?.success) {
+        const steps: string[] = data.solver.steps ?? [];
+        addAssistantMessage(
+          [`Result: ${data.solver.result}`, ...steps].join("\n"),
+        );
+      } else {
+        addAssistantMessage(
+          data.solver?.error_message ??
+            "I couldn't solve that. Could you rephrase it?",
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      addAssistantMessage("Couldn't reach the server. Please try again.");
+    }
   }
 
   function handleSend() {
@@ -33,7 +58,7 @@ export default function ChatInputForm({
       createdAt: new Date().toISOString(),
     };
 
-    setSubmittedValue([...submittedValue, nextMessage]);
+    setSubmittedValue((prev) => [...prev, nextMessage]);
     setInput("");
     sendPrompt(message);
   }

@@ -18,3 +18,14 @@ def multiplication(numbers: list [int | float]) -> int | float:
         res *= i
     return res
 
+def divide(numbers: list [int | float]) -> int | float:
+    if len(numbers) == 0:
+        return 0
+    res = numbers[0]
+    for i in range(1, len(numbers)):
+        if numbers[i] == 0:
+            raise ZeroDivisionError("Cannot divide by zero")
+        res /= numbers[i]
+    return res
+
+

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Header from "./components/header/header";
 import SidePanel from "./components/sidePanel/sidePanel";
 import { Convo } from "./components/convo/convo";
@@ -17,10 +17,7 @@ export default function App() {
         <SidePanel side="left" />
         <main className="app-main">
           <Convo input={submittedValue} />
-          <ChatInputForm
-            submittedValue={submittedValue}
-            setSubmittedValue={setSubmittedValue}
-          />
+          <ChatInputForm setSubmittedValue={setSubmittedValue} />
         </main>
         <SidePanel side="right" />
       </div>

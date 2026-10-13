@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,29 +12,51 @@ client = Anthropic()
 
 
 CLASSIFIER_INSTRUCTIONS = """
-Classify the users message as a simple arithmetic operation:
-addition, subtraction, multiplication, or division.
+Classify the user's message as one of the following operations:
+- addition
+- subtraction
+- multiplication
+- division
+- derivative
+- integral
 
+Do not calculate or solve anything.
 
-do not calculate or solve anything. Extract only numeric operands, 
-preserving their original order.
+For arithmetic problems (addition, subtraction, multiplication, division):
+- Extract only numeric operands into 'normalized_input', preserving their original order.
 
-If the message is unclear, combines operands, or is not one of these simple arithmetic problems, use problem_type: "unknown", 
-normalized input  as an empty list, and needs_clarification as true. 
+For calculus problems (derivative, integral):
+- Set 'problem_type' to 'derivative' or 'integral'.
+- Extract the normalized mathematical expression into 'expression' (e.g., '3*x^2 + 2*x', 'sin(x)', 'e^x').
+- Extract the variable of differentiation or integration into 'variable' (defaults to 'x').
+- For definite integrals, extract 'lower_bound' and 'upper_bound' if specified.
 
-return only the fields required by the provided schema
+If the message is unclear, combines incompatible operations, or is not one of these supported operations, use:
+- problem_type: "unknown"
+- normalized_input: []
+- needs_clarification: true
 
+Return only the fields required by the provided schema.
 """
 
 app = FastAPI(title = "RAG API", version="1.0.0")
 
+# Re-export route_problem for convenience and backwards compatibility
+route_problem = problem_router.route_problem
 
-# In production, I will set this to the real domain from env vars
-# FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://yourdomain.com")
+
+
+# Comma-separated list of allowed frontend origins, e.g.
+# FRONTEND_ORIGIN="https://yoursite.netlify.app,http://localhost:5173"
+FRONTEND_ORIGINS = [
+    o.strip().rstrip("/")
+    for o in os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").split(",")
+    if o.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], #React Dev server later lets replace this with "FRONTEND_ORIGIN" when deploying
+    allow_origins=FRONTEND_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
