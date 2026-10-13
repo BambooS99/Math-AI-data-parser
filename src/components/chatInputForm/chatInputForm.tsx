@@ -14,9 +14,10 @@ export default function ChatInputForm({
   setIsLoading: any;
 }) {
   const [input, setInput] = useState("");
+  const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
   async function sendPrompt(message: string) {
-    const url = "http://127.0.0.1:8000/chat";
+    const url = `${API_URL}/chat`;
     setIsLoading(true);
     try {
       const response = await fetch(url, {
