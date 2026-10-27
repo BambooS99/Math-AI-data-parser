@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./chatInputForm.scss";
 import type { ChatMessage } from "../../types/chat";
 import { ENDPOINTS } from "../../config/api";
+import { useDebounce } from "../../hooks/Debounce";
 
 export default function ChatInputForm({
   setSubmittedValue,
@@ -12,7 +13,19 @@ export default function ChatInputForm({
   setSubmittedValue: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [input, setInput] = useState("");
+  const SAVED_INPUT = "savedInput";
+  const [input, setInput] = useState(
+    () => sessionStorage.getItem(SAVED_INPUT) ?? "",
+  );
+  const debouncedSearchTerm = useDebounce(input, 1500);
+
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      sessionStorage.setItem(SAVED_INPUT, debouncedSearchTerm);
+    } else {
+      sessionStorage.removeItem(SAVED_INPUT);
+    }
+  }, [debouncedSearchTerm]);
 
   function addAssistantMessage(text: string) {
     const reply: ChatMessage = {
@@ -26,11 +39,13 @@ export default function ChatInputForm({
 
   async function sendPrompt(message: string) {
     setIsLoading(true);
+
     try {
       const response = await fetch(ENDPOINTS.chat, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
+        signal: AbortSignal.timeout(10_000),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
@@ -86,7 +101,9 @@ export default function ChatInputForm({
           className="chatform-bar__input"
           placeholder="Message Math GPT..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+          }}
           onKeyDown={handleKeyDown}
           rows={1}
           disabled={isLoading}
